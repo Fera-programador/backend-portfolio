@@ -14,7 +14,7 @@ app.use(express.json());
 let db;
 const initDB = async () => {
   db = await open({
-    filename: "./contatos.db",
+    filename: "/tmp/contatos.db",
     driver: sqlite3.Database,
   });
 
