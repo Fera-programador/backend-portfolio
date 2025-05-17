@@ -1,15 +1,15 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"No tests yet\" && exit 0"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": ["express", "sqlite", "nodejs", "backend"],
+  "author": "Your Name",
   "license": "ISC",
-  "description": "",
+  "description": "Simple Express backend using SQLite",
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^5.1.0",
