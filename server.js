@@ -1,87 +1,74 @@
+/* eslint-disable no-undef */
 import express from "express";
 import cors from "cors";
-import sqlite3 from "sqlite3";
-import { open } from "sqlite";
+import { createClient } from "@supabase/supabase-js";
+import dotenv from "dotenv";
+dotenv.config(); // Para carregar variáveis de ambiente de um .env
 
 const app = express();
-const PORT = 5000;
+const PORT = process.env.PORT || 3001;
 
-// Middlewares
 app.use(cors());
 app.use(express.json());
 
-// Conexão com o banco SQLite
-let db;
-const initDB = async () => {
-  db = await open({
-    filename: "./contatos.db",
-    driver: sqlite3.Database,
-  });
+// 🔐 Conexão com o Supabase
+const supabaseUrl = process.env.VITE_SUPABASE_URL;
+const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY;
 
-  // Cria a tabela se não existir
-  await db.run(`
-    CREATE TABLE IF NOT EXISTS contatos (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      nome TEXT NOT NULL,
-      email TEXT NOT NULL,
-      mensagem TEXT NOT NULL
-    )
-  `);
-};
 
-initDB();
+const supabase = createClient(supabaseUrl, supabaseKey);
 
-// Rota GET para listar os contatos
-app.get("/", async (req, res) => {
-  const contatos = await db.all("SELECT * FROM contatos");
-  let html = `
-    <h2>✅ Contatos Recebidos</h2>
-    <table border="1" cellpadding="8" cellspacing="0" style="font-family: sans-serif;">
-      <tr><th>ID</th><th>Nome</th><th>Email</th><th>Mensagem</th></tr>
-  `;
-  contatos.forEach((c) => {
-    html += `<tr><td>${c.id}</td><td>${c.nome}</td><td>${c.email}</td><td>${c.mensagem}</td></tr>`;
-  });
-  html += "</table>";
-  res.send(html);
-});
+// POST para inserir uma nova mensagem
+app.post("/api/mensagem", async (req, res) => {
+  console.log("🔍 Método:", req.method);
+  console.log("Content-Type:", req.headers["content-type"]);
+  console.log("Corpo da requisição:", req.body);
 
-// Rota GET para retornar os contatos em JSON
-app.get("/api/contato", async (req, res) => {
-  try {
-    const contatos = await db.all("SELECT * FROM contatos");
-    console.log("✅📋 Contatos recebidos:", contatos); // Exibe no console
-    res.json(contatos); // Retorna como JSON
-  } catch (err) {
-    console.error("Erro ao buscar contatos:", err);
-    res.status(500).json({ error: "Erro ao buscar contatos" });
+  if (!req.body) {
+    return res.status(400).json({ erro: "Corpo da requisição vazio" });
   }
-});
 
-// Rota POST para salvar novo contato
-app.post("/api/contato", async (req, res) => {
   const { Nome, Email, Mensagem } = req.body;
 
   if (!Nome || !Email || !Mensagem) {
-    return res.status(400).json({ success: false, message: "Campos obrigatórios ausentes." });
+    return res.status(400).json({ error: "Dados incompletos" });
   }
 
-  try {
-    await db.run(
-      "INSERT INTO contatos (nome, email, mensagem) VALUES (?, ?, ?)",
+  const { error } = await supabase.from("mensagens").insert([
+    {
       Nome,
       Email,
-      Mensagem
-    );
+      Mensagem,
+      Data: new Date().toISOString(),
+    },
+  ]);
 
-    res.status(200).json({ success: true, message: "✅ Mensagem salva com sucesso!" });
-  } catch (err) {
-    console.error("Erro ao inserir no banco:", err);
-    res.status(500).json({ success: false, message: "Erro no servidor." });
+  if (error) {
+    return res.status(500).json({ error: error.message });
   }
+
+  return res.status(200).json({ message: "Mensagem enviada com sucesso" });
 });
 
-// Inicia servidor
+// GET para listar as mensagens
+app.get("/api/mensagem", async (req, res) => {
+  console.log("🔍 Método:", req.method);
+  console.log("📨 Contatos Recebidos:");
+  
+
+  const { data, error } = await supabase
+    .from("mensagens")
+    .select("iD, Nome, Email, Mensagem, Data")
+    .order("iD", { ascending: true });
+
+    if (error) {
+    return res.status(500).json({ error: error.message });
+  }
+    console.log(data);
+  return res.status(200).json(data);
+});
+
+
 app.listen(PORT, () => {
-  console.log(`✅ Servidor rodando em http://localhost:${PORT}`);
+  console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
 });
