@@ -1,4 +1,4 @@
-# 📦 Backend Pessoal.
+# 📦 Backend Pessoal
 
 Este é o backend da aplicação pessoal, responsável por fornecer dados dinâmicos para o frontend. Ele foi desenvolvido com Node.js e Express e expõe uma API RESTful com as principais informações utilizadas no site: projetos, informações pessoais e contato.
 
