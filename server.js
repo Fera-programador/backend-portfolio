@@ -55,6 +55,8 @@ app.get("/api/mensagem", async (req, res) => {
   console.log("🔍 Método:", req.method);
   console.log("📨 Contatos Recebidos:");
   
+  // Desativa o cache
+  res.setHeader("Cache-Control", "no-store");
 
   const { data, error } = await supabase
     .from("mensagens")
