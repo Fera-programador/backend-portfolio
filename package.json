@@ -18,8 +18,10 @@
   "description": "Simple Express backend using SQLite",
   "dependencies": {
     "@supabase/supabase-js": "^2.50.0",
+    "axios": "^1.13.5",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
-    "express": "^5.1.0"
+    "express": "^5.1.0",
+    "node-cron": "^4.2.1"
   }
 }
