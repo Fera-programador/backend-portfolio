@@ -3,7 +3,10 @@ import express from "express";
 import cors from "cors";
 import { createClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
-dotenv.config(); // Para carregar variáveis de ambiente de um .env
+import cron from "node-cron";
+import axios from "axios";
+
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -15,8 +18,39 @@ app.use(express.json());
 const supabaseUrl = process.env.VITE_SUPABASE_URL;
 const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY;
 
-
 const supabase = createClient(supabaseUrl, supabaseKey);
+
+// =============================
+// 🚀 WORKFLOW AUTOMÁTICO
+// =============================
+
+const BACKEND_URL = "https://backend-portfolio-gudw.onrender.com/api/mensagem";
+
+async function enviarMensagemAutomatica() {
+  try {
+    const response = await axios.post(BACKEND_URL, {
+      Nome: process.env.AUTO_NOME || "Mensagem Automática",
+      Email: process.env.AUTO_EMAIL || "auto@bot.com",
+      Mensagem:
+        process.env.AUTO_MSG ||
+        "Mensagem enviada automaticamente a cada 5 dias",
+    });
+
+    console.log("✅ Envio automático realizado:", response.data);
+  } catch (error) {
+    console.error("❌ Erro no envio automático:", error.message);
+  }
+}
+
+// Executa a cada 5 dias às 09:00
+cron.schedule("0 9 */5 * *", () => {
+  console.log("⏱ Executando tarefa automática...");
+  enviarMensagemAutomatica();
+});
+
+// =============================
+// 📩 ROTAS
+// =============================
 
 // POST para inserir uma nova mensagem
 app.post("/api/mensagem", async (req, res) => {
@@ -54,8 +88,7 @@ app.post("/api/mensagem", async (req, res) => {
 app.get("/api/mensagem", async (req, res) => {
   console.log("🔍 Método:", req.method);
   console.log("📨 Contatos Recebidos:");
-  
-  // Desativa o cache
+
   res.setHeader("Cache-Control", "no-store");
 
   const { data, error } = await supabase
@@ -63,13 +96,13 @@ app.get("/api/mensagem", async (req, res) => {
     .select("iD, Nome, Email, Mensagem, Data")
     .order("iD", { ascending: true });
 
-    if (error) {
+  if (error) {
     return res.status(500).json({ error: error.message });
   }
-    console.log(data);
+
+  console.log(data);
   return res.status(200).json(data);
 });
-
 
 app.listen(PORT, () => {
   console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
